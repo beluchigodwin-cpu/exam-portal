@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://beluc.github.io/exam-portal/sitemap.xml
