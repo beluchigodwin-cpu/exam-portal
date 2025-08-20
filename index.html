@@ -1,0 +1,450 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speedway Success School CBT (JAMB-Style)</title>
+  <style>
+    :root{
+      --jamb-green:#0b3d2e; /* deep green */
+      --jamb-green-2:#145c43; /* hover */
+      --jamb-cream:#fdfbf2; /* background */
+      --accent:#ffc107; /* warm accent */
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--jamb-cream); color:#222;
+    }
+    header{
+      background:var(--jamb-green); color:#fff; padding:16px; text-align:center; font-weight:700;
+    }
+    footer{
+      background:var(--jamb-green); color:#fff; padding:12px; text-align:center; font-size:13px; margin-top:24px;
+    }
+    .container{max-width:980px;margin:24px auto;padding:0 16px}
+    .card{background:#fff;border:1px solid #dcdcdc;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.05);padding:18px;margin:16px 0}
+    h2,h3{color:var(--jamb-green);margin:0 0 12px}
+    label{font-weight:600}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #cfcfcf;border-radius:8px;margin-top:6px;margin-bottom:12px;font-size:14px}
+    button{background:var(--jamb-green);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer}
+    button:hover{background:var(--jamb-green-2)}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .row>.col{flex:1 1 300px}
+    .hidden{display:none}
+    .muted{color:#666;font-size:13px}
+    .pill{display:inline-block;background:#e9f5ef;color:#0b3d2e;border:1px solid #bfe3cf;border-radius:999px;padding:4px 10px;font-size:12px}
+    .alert{background:#fff8e1;border:1px solid #ffe08a;padding:10px;border-radius:8px}
+    .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0}
+    .options label{display:block;margin:8px 0;padding:8px;border:1px solid #e6e6e6;border-radius:8px;cursor:pointer}
+    .options input{margin-right:8px}
+    .navs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .timer{font-weight:800;color:#c62828}
+    /* Calculator */
+    #calculator{position:fixed;top:120px;right:24px;width:260px;background:#fff;border:2px solid var(--jamb-green);border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.15);padding:10px;display:none;z-index:9999;cursor:move}
+    #calc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    #calc-display{width:100%;height:46px;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:18px;text-align:right}
+    .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+    .calc-btn{padding:10px 0;border:1px solid #e5e5e5;background:#f7f7f7;border-radius:8px;font-weight:700;font-size:16px}
+    .calc-btn.op{background:#e9f5ef}
+  </style>
+</head>
+<body>
+  <header>Speedway Success School CBT — JAMB-Style</header>  <div class="container">
+    <!-- LOGIN CARD (Option B: pick role from dropdown) -->
+    <div id="loginCard" class="card">
+      <h2>Login</h2>
+      <div class="row">
+        <div class="col">
+          <label for="role">Role</label>
+          <select id="role">
+            <option value="student">Student</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="col"></div>
+      </div>
+      <label for="username">Username</label>
+      <input id="username" placeholder="e.g. student1 or admin" />
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="Enter password" />
+      <div class="toolbar">
+        <div class="muted">Admin: <b>admin / admin123</b> &nbsp;|&nbsp; Student: any username / <b>student123</b></div>
+        <button onclick="handleLogin()">Login</button>
+      </div>
+    </div><!-- ADMIN DASHBOARD -->
+<div id="adminDash" class="card hidden">
+  <div class="toolbar">
+    <h2>Admin Dashboard <span class="pill">Speedway Success School</span></h2>
+    <div>
+      <button onclick="saveBank()" title="Save to localStorage">Save</button>
+      <button onclick="logout()" style="background:#b71c1c">Logout</button>
+    </div>
+  </div>
+  <p class="muted">Manage subjects, approve questions, edit or add new ones. Changes are stored in this browser (localStorage).</p>
+
+  <div class="row">
+    <div class="col">
+      <label for="admSubject">Subject</label>
+      <select id="admSubject" onchange="renderAdminList()"></select>
+    </div>
+    <div class="col">
+      <label for="filterApproval">Filter</label>
+      <select id="filterApproval" onchange="renderAdminList()">
+        <option value="all">All</option>
+        <option value="approved">Approved only</option>
+        <option value="pending">Pending only</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="adminList" class="card" style="max-height:360px;overflow:auto"></div>
+
+  <h3>Add / Edit Question</h3>
+  <div class="row">
+    <div class="col">
+      <label>Question Text</label>
+      <textarea id="qText" rows="3" placeholder="Type the question..."></textarea>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col"><label>Option A</label><input id="optA"/></div>
+    <div class="col"><label>Option B</label><input id="optB"/></div>
+  </div>
+  <div class="row">
+    <div class="col"><label>Option C</label><input id="optC"/></div>
+    <div class="col"><label>Option D</label><input id="optD"/></div>
+  </div>
+  <div class="row">
+    <div class="col"><label>Correct (A/B/C/D)</label><input id="optAns"/></div>
+    <div class="col"><label>Status</label>
+      <select id="optApproved">
+        <option value="true">Approved</option>
+        <option value="false">Pending</option>
+      </select>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button onclick="addOrUpdateQuestion()">Save Question</button>
+    <button onclick="clearEditor()" style="background:#6b7280">Clear</button>
+  </div>
+  <input type="hidden" id="editIndex" value="" />
+</div>
+
+<!-- STUDENT EXAM (instructions -> exam) -->
+<div id="studentCard" class="card hidden">
+  <div class="toolbar">
+    <h2>Candidate Portal <span class="pill">CBT</span></h2>
+    <button onclick="logout()" style="background:#b71c1c">Logout</button>
+  </div>
+  <label for="stuSubject">Choose Subject</label>
+  <select id="stuSubject"></select>
+  <div class="alert" style="margin-top:10px">
+    <b>Important Instructions (JAMB-style)</b>
+    <ul>
+      <li>You have <b>30 minutes</b> to answer 20 questions.</li>
+      <li>Use <b>Next</b> and <b>Previous</b> to navigate. Your selections are auto-saved.</li>
+      <li>Click <b>Submit</b> when done. If time elapses, submission is automatic.</li>
+      <li>Calculator is available during the exam. Click the <b>Calculator</b> button to toggle.</li>
+    </ul>
+  </div>
+  <div class="toolbar">
+    <button onclick="startExam()">Start Exam</button>
+    <div class="timer" id="timer">00:30:00</div>
+  </div>
+
+  <div id="examPanel" class="hidden">
+    <div class="toolbar">
+      <div id="qBadge" class="pill">Question 1 / 20</div>
+      <button onclick="toggleCalc()" style="background:var(--accent);color:#222">Calculator</button>
+    </div>
+    <div id="qTextBox" class="card"></div>
+    <div id="qOptions" class="options"></div>
+    <div class="navs">
+      <button onclick="prevQ()">Previous</button>
+      <button onclick="nextQ()">Next</button>
+      <button onclick="submitExam()" style="background:#2e7d32">Submit</button>
+    </div>
+  </div>
+
+  <div id="resultPanel" class="hidden card"></div>
+</div>
+
+  </div>  <!-- Calculator -->  <div id="calculator">
+    <div id="calc-header">
+      <strong>Calculator</strong>
+      <button onclick="toggleCalc()" style="background:#b71c1c">✕</button>
+    </div>
+    <input id="calc-display" readonly />
+    <div class="calc-grid">
+      <button class="calc-btn" onclick="cPress('7')">7</button>
+      <button class="calc-btn" onclick="cPress('8')">8</button>
+      <button class="calc-btn" onclick="cPress('9')">9</button>
+      <button class="calc-btn op" onclick="cPress('/')">÷</button>
+      <button class="calc-btn" onclick="cPress('4')">4</button>
+      <button class="calc-btn" onclick="cPress('5')">5</button>
+      <button class="calc-btn" onclick="cPress('6')">6</button>
+      <button class="calc-btn op" onclick="cPress('*')">×</button>
+      <button class="calc-btn" onclick="cPress('1')">1</button>
+      <button class="calc-btn" onclick="cPress('2')">2</button>
+      <button class="calc-btn" onclick="cPress('3')">3</button>
+      <button class="calc-btn op" onclick="cPress('-')">−</button>
+      <button class="calc-btn" onclick="cPress('0')">0</button>
+      <button class="calc-btn" onclick="cPress('.')">.</button>
+      <button class="calc-btn op" onclick="calcEval()">=</button>
+      <button class="calc-btn op" onclick="cPress('+')">+</button>
+      <button class="calc-btn op" onclick="calcClear()" style="grid-column: span 4;background:#ffe9e9">Clear</button>
+    </div>
+  </div>  <footer>
+    © 2025 Speedway Success School | BG-CONCEPT | beluchigodwin@gmail.com | 08167500437
+  </footer>  <script>
+    // ============================
+    // Data Model (Bank + Session)
+    // ============================
+    const SUBJECTS = ["English","Mathematics","Chemistry","Physics","Biology","Further Maths"];
+
+    // Question shape: { q:"text", opts:{A,B,C,D}, ans:"A", approved:true }
+    let bank = JSON.parse(localStorage.getItem('cbt_bank_v1')||'null') || {
+      English: [], Mathematics: [], Chemistry: [], Physics: [], Biology: [], "Further Maths": []
+    };
+
+    // ============================
+    // AUTH
+    // ============================
+    function handleLogin(){
+      const role = document.getElementById('role').value;
+      const u = document.getElementById('username').value.trim();
+      const p = document.getElementById('password').value.trim();
+
+      if(role==='admin'){
+        if(u==='admin' && p==='admin123'){
+          document.getElementById('loginCard').classList.add('hidden');
+          document.getElementById('adminDash').classList.remove('hidden');
+          mountAdmin();
+        }else{
+          alert('Invalid admin credentials');
+        }
+      }else{ // student
+        if(u && p==='student123'){
+          document.getElementById('loginCard').classList.add('hidden');
+          document.getElementById('studentCard').classList.remove('hidden');
+          mountStudent();
+        }else{
+          alert('Invalid student credentials. Use any username and password: student123');
+        }
+      }
+    }
+    function logout(){ location.reload(); }
+
+    // ============================
+    // ADMIN UI
+    // ============================
+    function mountAdmin(){
+      const sel = document.getElementById('admSubject');
+      sel.innerHTML = SUBJECTS.map(s=>`<option>${s}</option>`).join('');
+      renderAdminList();
+    }
+
+    function renderAdminList(){
+      const subj = document.getElementById('admSubject').value;
+      const filter = document.getElementById('filterApproval').value;
+      const list = document.getElementById('adminList');
+      const arr = bank[subj]||[];
+      let html = '';
+      arr.forEach((q,i)=>{
+        if(filter==='approved' && !q.approved) return;
+        if(filter==='pending' && q.approved) return;
+        html += `
+          <div class="card" style="margin:8px 0">
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+              <div><b>Q${i+1}.</b> ${q.q} <span class="pill" style="margin-left:6px;${q.approved?'':'background:#fff0f0;color:#b71c1c;border-color:#ffcdd2'}">${q.approved?'Approved':'Pending'}</span></div>
+              <div>
+                <button onclick="editQuestion('${subj}',${i})" style="background:#546e7a">Edit</button>
+                <button onclick="toggleApprove('${subj}',${i})" style="background:#2e7d32">${q.approved?'Unapprove':'Approve'}</button>
+                <button onclick="delQuestion('${subj}',${i})" style="background:#b71c1c">Delete</button>
+              </div>
+            </div>
+            <div class="muted">A) ${q.opts.A} &nbsp; B) ${q.opts.B} &nbsp; C) ${q.opts.C} &nbsp; D) ${q.opts.D} &nbsp; | Ans: <b>${q.ans}</b></div>
+          </div>`;
+      });
+      list.innerHTML = html || '<div class="muted">No questions yet for this subject.</div>';
+    }
+
+    function clearEditor(){
+      document.getElementById('qText').value='';
+      document.getElementById('optA').value='';
+      document.getElementById('optB').value='';
+      document.getElementById('optC').value='';
+      document.getElementById('optD').value='';
+      document.getElementById('optAns').value='';
+      document.getElementById('optApproved').value='true';
+      document.getElementById('editIndex').value='';
+    }
+
+    function addOrUpdateQuestion(){
+      const subj = document.getElementById('admSubject').value;
+      const q = document.getElementById('qText').value.trim();
+      const A = document.getElementById('optA').value.trim();
+      const B = document.getElementById('optB').value.trim();
+      const C = document.getElementById('optC').value.trim();
+      const D = document.getElementById('optD').value.trim();
+      const ans = document.getElementById('optAns').value.trim().toUpperCase();
+      const approved = document.getElementById('optApproved').value==='true';
+      if(!q||!A||!B||!C||!D||!['A','B','C','D'].includes(ans)){
+        alert('Fill all fields correctly (answer must be A/B/C/D).');
+        return;
+      }
+      const idx = document.getElementById('editIndex').value;
+      const item = { q, opts:{A,B,C,D}, ans, approved };
+      if(idx==='') bank[subj].push(item); else bank[subj][+idx] = item;
+      saveBank();
+      clearEditor();
+      renderAdminList();
+    }
+
+    function editQuestion(subj, i){
+      const it = bank[subj][i];
+      document.getElementById('admSubject').value=subj;
+      document.getElementById('qText').value=it.q;
+      document.getElementById('optA').value=it.opts.A;
+      document.getElementById('optB').value=it.opts.B;
+      document.getElementById('optC').value=it.opts.C;
+      document.getElementById('optD').value=it.opts.D;
+      document.getElementById('optAns').value=it.ans;
+      document.getElementById('optApproved').value=it.approved? 'true':'false';
+      document.getElementById('editIndex').value=String(i);
+      renderAdminList();
+    }
+
+    function toggleApprove(subj,i){ bank[subj][i].approved = !bank[subj][i].approved; saveBank(); renderAdminList(); }
+    function delQuestion(subj,i){ if(confirm('Delete this question?')){ bank[subj].splice(i,1); saveBank(); renderAdminList(); } }
+    function saveBank(){ localStorage.setItem('cbt_bank_v1', JSON.stringify(bank)); alert('Saved!'); }
+
+    // ============================
+    // STUDENT / EXAM ENGINE
+    // ============================
+    let run = { subj:"", order:[], answers:{}, idx:0, left: 30*60, tId:null };
+
+    function mountStudent(){
+      const sel = document.getElementById('stuSubject');
+      sel.innerHTML = SUBJECTS.map(s=>`<option>${s}</option>`).join('');
+    }
+
+    function startExam(){
+      run.subj = document.getElementById('stuSubject').value;
+      const pool = (bank[run.subj]||[]).filter(q=>q.approved);
+      if(pool.length<20){ alert('Not enough approved questions (need 20).'); return; }
+      // pick first 20 (already 20 in preload), then shuffle order only
+      run.order = Array.from({length:20},(_,i)=>i);
+      shuffle(run.order);
+      run.answers={}; run.idx=0; run.left=30*60;
+      document.getElementById('examPanel').classList.remove('hidden');
+      document.getElementById('resultPanel').classList.add('hidden');
+      tickTimer();
+      if(run.tId) clearInterval(run.tId);
+      run.tId = setInterval(()=>{ run.left--; tickTimer(); if(run.left<=0){ clearInterval(run.tId); submitExam(); } },1000);
+      renderQ(pool);
+    }
+
+    function tickTimer(){
+      const t = run.left; const m = Math.floor(t/60); const s = t%60;
+      document.getElementById('timer').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function renderQ(pool){
+      const q = pool[ run.order[run.idx] ];
+      document.getElementById('qBadge').textContent = `Question ${run.idx+1} / 20`;
+      document.getElementById('qTextBox').innerHTML = `<b>${q.q}</b>`;
+      const saved = run.answers[run.idx] || '';
+      const box = document.getElementById('qOptions');
+      box.innerHTML = ['A','B','C','D'].map(k=>{
+        const checked = saved===k ? 'checked' : '';
+        return `<label><input type="radio" name="opt" value="${k}" ${checked} onchange="selOpt('${k}')"> ${k}. ${q.opts[k]}</label>`;
+      }).join('');
+    }
+
+    function selOpt(k){ run.answers[run.idx]=k; }
+    function nextQ(){ if(run.idx<19){ run.idx++; renderQ((bank[run.subj]||[]).filter(q=>q.approved)); } }
+    function prevQ(){ if(run.idx>0){ run.idx--; renderQ((bank[run.subj]||[]).filter(q=>q.approved)); } }
+
+    function submitExam(){
+      const pool = (bank[run.subj]||[]).filter(q=>q.approved);
+      let score=0; for(let i=0;i<20;i++){ const q=pool[run.order[i]]; if(run.answers[i]===q.ans) score++; }
+      clearInterval(run.tId);
+      document.getElementById('examPanel').classList.add('hidden');
+      const pct = ((score/20)*100).toFixed(2);
+      document.getElementById('resultPanel').classList.remove('hidden');
+      document.getElementById('resultPanel').innerHTML = `<h3>Result</h3><p>Subject: <b>${run.subj}</b></p><p>Score: <b>${score}</b> / 20 (${pct}%)</p>`;
+    }
+
+    // ============================
+    // Calculator (movable)
+    // ============================
+    function toggleCalc(){ const c=document.getElementById('calculator'); c.style.display = (c.style.display==='none'||c.style.display==='')?'block':'none'; }
+    function cPress(v){ const d=document.getElementById('calc-display'); d.value += v; }
+    function calcEval(){ const d=document.getElementById('calc-display'); try{ d.value = eval(d.value||'0'); }catch{ d.value='Error'; } }
+    function calcClear(){ document.getElementById('calc-display').value=''; }
+    // drag
+    (function(){
+      const el = document.getElementById('calculator');
+      let startX=0,startY=0,drag=false;
+      document.getElementById('calc-header').addEventListener('mousedown',e=>{drag=true;startX=e.clientX-el.offsetLeft;startY=e.clientY-el.offsetTop;});
+      document.addEventListener('mousemove',e=>{ if(!drag) return; el.style.left=(e.clientX-startX)+'px'; el.style.top=(e.clientY-startY)+'px'; });
+      document.addEventListener('mouseup',()=>drag=false);
+    })();
+
+    // ============================
+    // Utils & Preload (EN + MATH 20 each in Part 1)
+    // ============================
+    function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+
+    // ---- PRELOAD ENGLISH (20) ----
+    if(bank.English.length===0){ bank.English = [
+      {q:"Choose the synonym of ‘brisk’.", opts:{A:"Slow", B:"Lively", C:"Tired", D:"Quiet"}, ans:"B", approved:true},
+      {q:"The antonym of ‘scarce’ is ___.", opts:{A:"rare", B:"few", C:"plentiful", D:"diminished"}, ans:"C", approved:true},
+      {q:"Fill in: The committee ___ tomorrow.", opts:{A:"meet", B:"meets", C:"meeting", D:"met"}, ans:"B", approved:true},
+      {q:"Choose the correctly punctuated sentence.", opts:{A:"Where are you, going?", B:"Where are you going?", C:"Where are, you going?", D:"Where are you going."}, ans:"B", approved:true},
+      {q:"Pick the odd one out (part of speech).", opts:{A:"noun", B:"adverb", C:"pronoun", D:"syllable"}, ans:"D", approved:true},
+      {q:"Identify the stress pattern for ‘economy’.", opts:{A:"e-CO-nomy", B:"eco-NO-my", C:"e-CON-o-my", D:"E-co-no-my"}, ans:"B", approved:true},
+      {q:"Which is a complex sentence?", opts:{A:"I came and I saw.", B:"If it rains, we will cancel the trip.", C:"Close the door.", D:"The boy ran quickly."}, ans:"B", approved:true},
+      {q:"Choose the correct preposition: He insisted ___ paying.", opts:{A:"to", B:"on", C:"for", D:"at"}, ans:"B", approved:true},
+      {q:"Best passive form: They are building a bridge.", opts:{A:"A bridge is built.", B:"A bridge was built.", C:"A bridge is being built.", D:"A bridge has been built."}, ans:"C", approved:true},
+      {q:"Select the closest in meaning to ‘meticulous’.", opts:{A:"careless", B:"thorough", C:"casual", D:"hurried"}, ans:"B", approved:true},
+      {q:"Fill in: Neither the teacher nor the students ___ ready.", opts:{A:"was", B:"is", C:"are", D:"be"}, ans:"C", approved:true},
+      {q:"Choose the correct spellings.", opts:{A:"definately", B:"definitely", C:"definitly", D:"defintely"}, ans:"B", approved:true},
+      {q:"‘He broke the news’ means ___.", opts:{A:"He criticized", B:"He announced", C:"He repaired", D:"He delayed"}, ans:"B", approved:true},
+      {q:"Select the correct tag: She dances well, ___?", opts:{A:"does she", B:"doesn’t she", C:"did she", D:"isn’t she"}, ans:"B", approved:true},
+      {q:"Best connector: He studied hard; ___, he passed.", opts:{A:"although", B:"however", C:"therefore", D:"meanwhile"}, ans:"C", approved:true},
+      {q:"Choose the correctly ordered sentence.", opts:{A:"Never I have seen this.", B:"I have never seen this.", C:"I never have seen this.", D:"Never have I seen this?"}, ans:"B", approved:true},
+      {q:"Meaning of the idiom: ‘spill the beans’.", opts:{A:"waste food", B:"reveal a secret", C:"plant crops", D:"start a fight"}, ans:"B", approved:true},
+      {q:"Fill in: The report was submitted ___ time.", opts:{A:"on", B:"at", C:"in", D:"by"}, ans:"A", approved:true},
+      {q:"Choose the correct tense: I ___ him since Monday.", opts:{A:"have seen", B:"saw", C:"have been seeing", D:"haven’t seen"}, ans:"D", approved:true},
+      {q:"Pick the correct word: The medicine will ___ the pain.", opts:{A:"elevate", B:"alleviate", C:"levitate", D:"relegate"}, ans:"B", approved:true}
+    ]; }
+
+    // ---- PRELOAD MATHEMATICS (20) ----
+    if(bank.Mathematics.length===0){ bank.Mathematics = [
+      {q:"Evaluate: 2(3x + 4) = ?", opts:{A:"6x+8", B:"5x+4", C:"3x+6", D:"6x+4"}, ans:"A", approved:true},
+      {q:"Simplify: (x^2 * x^3)", opts:{A:"x^5", B:"x^6", C:"x^3", D:"x^2"}, ans:"A", approved:true},
+      {q:"Solve for x: 5x - 7 = 18", opts:{A:"x=5", B:"x= ", C:"x= ", D:"x= ",}, ans:"A", approved:true},
+      {q:"Find the gradient of the line y = 3x - 2", opts:{A:"-2", B:"3", C:"2", D:"1/3"}, ans:"B", approved:true},
+      {q:"If a triangle has sides 3,4,5 then it is ___.", opts:{A:"isosceles", B:"equilateral", C:"right-angled", D:"scalene (not right)"}, ans:"C", approved:true},
+      {q:"Convert 0.75 to a fraction in simplest form.", opts:{A:"3/4", B:"1/3", C:"4/5", D:"2/3"}, ans:"A", approved:true},
+      {q:"Evaluate: (2/3) of 60", opts:{A:"20", B:"30", C:"40", D:"45"}, ans:"B", approved:true},
+      {q:"Area of a circle with r=7 (\u03C0=22/7).", opts:{A:"154", B:"44", C:"308", D:"49"}, ans:"A", approved:true},
+      {q:"Solve: If 3x=21, then x= ?", opts:{A:"6", B:"7", C:"8", D:"9"}, ans:"B", approved:true},
+      {q:"Find simple interest on ₦5000 at 10% for 2 years.", opts:{A:"₦1000", B:"₦500", C:"₦2000", D:"₦1500"}, ans:"A", approved:true},
+      {q:"Value of \u221A81.", opts:{A:"7", B:"8", C:"9", D:"10"}, ans:"C", approved:true},
+      {q:"If y varies directly as x and y=12 when x=4, find y when x=9.", opts:{A:"24", B:"27", C:"36", D:"18"}, ans:"B", approved:true},
+      {q:"Solve: 2x + 5 = 19.", opts:{A:"x=12", B:"x=7", C:"x=14", D:"x=9"}, ans:"B", approved:true},
+      {q:"The mean of 2, 4, 6, 8 is ___.", opts:{A:"5", B:"6", C:"4", D:"7"}, ans:"A", approved:true},
+      {q:"Perimeter of rectangle 6 by 4.", opts:{A:"24", B:"20", C:"12", D:"28"}, ans:"B", approved:true},
+      {q:"Simplify: (x^3)/(x)", opts:{A:"x^2", B:"x^4", C:"x", D:"1"}, ans:"A", approved:true},
+      {q:"Interior angles of triangle sum to ___.", opts:{A:"90°", B:"120°", C:"180°", D:"360°"}, ans:"C", approved:true},
+      {q:"If sin θ = 1/2, θ could be ___.", opts:{A:"30°", B:"45°", C:"60°", D:"90°"}, ans:"A", approved:true},
+      {q:"Median of 3, 5, 9, 11, 12 is ___.", opts:{A:"9", B:"8", C:"10", D:"7"}, ans:"A", approved:true},
+      {q:"Factorize: x^2 - 9.", opts:{A:"(x-3)^2", B:"(x-3)(x+3)", C:"(x+9)", D:"(x-9)"}, ans:"B", approved:true}
+    ]; }
+
+    // Persist initial preload
+    localStorage.setItem('cbt_bank_v1', JSON.stringify(bank));
+  </script></body>
+</html>
